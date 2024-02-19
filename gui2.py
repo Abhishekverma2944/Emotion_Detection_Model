@@ -87,6 +87,22 @@ def Detect(camera, model, face_cascade, eye_cascade):
         # Add text indicating face ratio
         cv2.putText(frame, f"Face Ratio: {face_ratio:.2f}", (x, y - 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
+        # Voice recognition
+        with sr.Microphone() as source:
+            print("Listening...")
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source)
+
+        try:
+            print("Recognizing...")
+            caption = recognizer.recognize_google(audio)
+            print(f"Caption: {caption}")
+            cv2.putText(frame, f"Caption: {caption}", (x, y - 40), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        except sr.UnknownValueError:
+            print("Could not understand audio")
+        except sr.RequestError as e:
+            print(f"Could not request results: {e}")
+
     return frame
 
 
@@ -98,23 +114,6 @@ def update_frame():
     display_label.imgtk = imgtk
     display_label.configure(image=imgtk)
     display_label.after(10, update_frame)
-
-
-def recognize_speech():
-    recognizer = sr.Recognizer()  # Initialize the speech recognizer
-    with sr.Microphone() as source:
-        print("Listening...")
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
-
-    try:
-        print("Recognizing...")
-        caption = recognizer.recognize_google(audio)
-        print(f"Caption: {caption}")
-    except sr.UnknownValueError:
-        print("Could not understand audio")
-    except sr.RequestError as e:
-        print(f"Could not request results: {e}")
 
 
 # Initialize Tkinter window
@@ -142,9 +141,6 @@ camera = cv2.VideoCapture(0)
 
 # Update the frame
 update_frame()
-
-# Bind a key press event to trigger speech recognition
-top.bind("<space>", lambda event: recognize_speech())
 
 # Run the Tkinter event loop
 top.mainloop()
